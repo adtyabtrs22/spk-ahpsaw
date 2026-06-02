@@ -14,7 +14,7 @@
 *.key
 *.p12
 *.pfx
-CREDENTIALS.md       # berisi credential sensitif
+.CREDENTIALS.md       # berisi credential sensitif
 
 
 # ============================================================
