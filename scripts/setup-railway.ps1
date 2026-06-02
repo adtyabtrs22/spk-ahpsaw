@@ -138,11 +138,14 @@ Write-Step 7 "Membuat domain publik backend..."
 
 $BACKEND_URL = ""
 try {
-    railway domain --service backend
+    # Coba buat domain dulu (boleh gagal kalau sudah ada)
+    railway domain --service backend 2>$null | Out-Null
     Start-Sleep -Seconds 5
-    $domainRaw = (railway domain --service backend 2>$null)
-    if ($domainRaw) {
-        $BACKEND_URL = if ($domainRaw -match "^https://") { $domainRaw.Trim() } else { "https://$($domainRaw.Trim())" }
+    # Ambil semua output Railway (termasuk baris yg sudah ada domain)
+    $domainRaw = (railway domain --service backend 2>&1) -join " "
+    # Ekstrak URL https:// dari manapun dalam output
+    if ($domainRaw -match "(https://[\w\-\.]+\.railway\.app)") {
+        $BACKEND_URL = $Matches[1].Trim()
     }
 } catch {}
 
@@ -190,11 +193,14 @@ Write-Step 9 "Membuat domain frontend & update CORS backend..."
 
 $FRONTEND_URL = ""
 try {
-    railway domain --service frontend
+    # Coba buat domain dulu (boleh gagal kalau sudah ada)
+    railway domain --service frontend 2>$null | Out-Null
     Start-Sleep -Seconds 5
-    $domainRaw = (railway domain --service frontend 2>$null)
-    if ($domainRaw) {
-        $FRONTEND_URL = if ($domainRaw -match "^https://") { $domainRaw.Trim() } else { "https://$($domainRaw.Trim())" }
+    # Ambil semua output Railway (termasuk baris yg sudah ada domain)
+    $domainRaw = (railway domain --service frontend 2>&1) -join " "
+    # Ekstrak URL https:// dari manapun dalam output
+    if ($domainRaw -match "(https://[\w\-\.]+\.railway\.app)") {
+        $FRONTEND_URL = $Matches[1].Trim()
     }
 } catch {}
 
@@ -235,4 +241,10 @@ Write-Host "    git push origin main" -ForegroundColor Gray
 Write-Host "  Railway otomatis redeploy!" -ForegroundColor Yellow
 Write-Host ""
 
-Start-Process $FRONTEND_URL
+# Buka browser jika URL tersedia
+if ($FRONTEND_URL -and $FRONTEND_URL -match "^https://") {
+    Write-Host "  Membuka browser ke $FRONTEND_URL ..." -ForegroundColor Cyan
+    Start-Process $FRONTEND_URL
+} else {
+    Write-Warn "URL frontend tidak valid, buka manual di browser."
+}
