@@ -290,11 +290,9 @@ Write-Step 5 "Mengatur VITE_API_URL di Vercel..."
 Push-Location "$PSScriptRoot\..\frontend"
 
 Write-Warn "Menambahkan environment variable VITE_API_URL ke Vercel..."
-vercel env add VITE_API_URL production <<< "$BACKEND_URL" 2>$null
-
-# Cara alternatif jika <<< tidak berfungsi di PowerShell
-$env:VITE_API_URL_VAL = $BACKEND_URL
-echo $BACKEND_URL | vercel env add VITE_API_URL production 2>$null
+# Pipe nilai ke vercel env add (cara PowerShell)
+$BACKEND_URL | vercel env add VITE_API_URL production 2>&1 | Out-Null
+Write-OK "VITE_API_URL=$BACKEND_URL diset ke Vercel."
 
 Pop-Location
 
