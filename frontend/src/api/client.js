@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000/api';
+// Di production (Railway): VITE_API_URL diset via environment variable
+// Di local dev: fallback ke localhost:8000
+const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`;
 
 const client = axios.create({
   baseURL: API_BASE,

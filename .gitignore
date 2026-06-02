@@ -9,7 +9,9 @@
 # ============================================================
 .env
 .env.*
-!.env.example        # file contoh boleh di-upload
+!.env.example        # file template boleh di-upload
+!.env.production     # berisi URL publik Railway, BUKAN secret
+*.env.local          # local override tetap diblokir
 *.pem
 *.key
 *.p12
