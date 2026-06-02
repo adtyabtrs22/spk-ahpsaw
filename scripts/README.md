@@ -2,38 +2,54 @@
 
 Folder ini berisi script otomasi untuk kebutuhan operasional project SPK AHP-SAW.
 
-## `setup-railway.ps1` — Deploy Otomatis ke Railway (Windows)
+---
 
-Script ini melakukan **semua langkah deploy Railway secara otomatis**:
-1. Install Railway CLI (jika belum ada)
-2. Login ke Railway via browser
-3. Buat project Railway
-4. Tambah PostgreSQL database
-5. Deploy backend (FastAPI) + set semua env variable
-6. Deploy frontend (React/Vite) + set VITE_API_URL
-7. Update CORS backend dengan URL frontend
-8. Tampilkan URL hasil deploy
+## `setup-free-deploy.ps1` — Deploy Gratis (Supabase + Render + Vercel) ⭐ REKOMENDASI
 
-### Cara Pakai (SEKALI SAJA)
+Script ini deploy project ke **3 platform gratis** tanpa peak hours dan tanpa kartu kredit:
 
-Buka terminal VS Code (`Ctrl + \``) lalu jalankan:
+| Komponen | Platform | Gratis |
+|----------|----------|--------|
+| Database (PostgreSQL) | Supabase | ✅ 500MB |
+| Backend (FastAPI)     | Render   | ✅ 750 jam/bulan |
+| Frontend (React/Vite) | Vercel   | ✅ Unlimited |
+
+### Cara Pakai
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/setup-railway.ps1
+powershell -ExecutionPolicy Bypass -File scripts/setup-free-deploy.ps1
 ```
 
 ### Yang Perlu Disiapkan
 
-- Sudah login GitHub di browser
-- Project sudah di-push ke GitHub (`git push origin main`)
-- Node.js sudah terinstall (untuk Railway CLI)
+- Node.js terinstall (untuk Vercel CLI)
+- Git terinstall dan project sudah di-push ke GitHub
+- Akun GitHub (untuk login ke semua platform)
 
-### Setelah Script Selesai
+### Auto-Redeploy Setelah Deploy Pertama
 
-Cukup `git push` untuk auto-deploy:
+Cukup push ke GitHub:
 ```bash
 git add -A
 git commit -m "pesan perubahan"
 git push origin main
 ```
-Railway otomatis build & deploy ulang dalam ~3-5 menit.
+Render & Vercel otomatis build & deploy ulang dalam ~3 menit.
+
+---
+
+## `setup-railway.ps1` — Deploy ke Railway (alternatif)
+
+> ⚠️ Railway free-tier punya **peak hours** (8 AM–8 PM Asia/Singapore) — deploy bisa gagal.
+
+Script deploy ke Railway (backend + frontend + PostgreSQL dalam 1 platform).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-railway.ps1
+```
+
+---
+
+## `deploy-info.txt` — Info URL Deploy
+
+File ini dibuat otomatis oleh script setelah deploy selesai, berisi URL backend & frontend.
