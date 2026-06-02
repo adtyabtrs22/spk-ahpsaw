@@ -1,7 +1,7 @@
 # ============================================================
 # setup-railway.ps1
-# Script otomatis deploy SPK AHP-SAW ke Railway
-# Jalankan SEKALI SAJA dari terminal VS Code:
+# Script otomasi deploy SPK AHP-SAW ke Railway
+# Jalankan SEKALI dari terminal VS Code:
 #   powershell -ExecutionPolicy Bypass -File scripts/setup-railway.ps1
 # ============================================================
 
@@ -10,16 +10,16 @@ $ErrorActionPreference = "Stop"
 function Write-Step($num, $msg) {
     Write-Host ""
     Write-Host "[$num] $msg" -ForegroundColor Cyan
-    Write-Host ("-" * 50) -ForegroundColor DarkGray
+    Write-Host ("--------------------------------------------------") -ForegroundColor DarkGray
 }
 
-function Write-OK($msg)   { Write-Host "  ✓ $msg" -ForegroundColor Green }
-function Write-Warn($msg) { Write-Host "  ! $msg" -ForegroundColor Yellow }
-function Write-Fail($msg) { Write-Host "  ✗ $msg" -ForegroundColor Red }
+function Write-OK($msg)   { Write-Host "  [OK] $msg" -ForegroundColor Green }
+function Write-Warn($msg) { Write-Host "  [!]  $msg" -ForegroundColor Yellow }
+function Write-Fail($msg) { Write-Host "  [X]  $msg" -ForegroundColor Red; exit 1 }
 
 Write-Host ""
 Write-Host "=======================================" -ForegroundColor Magenta
-Write-Host "  SPK AHP-SAW — Railway Auto Setup" -ForegroundColor Magenta
+Write-Host "  SPK AHP-SAW -- Railway Auto Setup   " -ForegroundColor Magenta
 Write-Host "=======================================" -ForegroundColor Magenta
 
 
@@ -34,7 +34,7 @@ if (-not $railwayInstalled) {
     npm install -g @railway/cli
     Write-OK "Railway CLI berhasil diinstall!"
 } else {
-    Write-OK "Railway CLI sudah terinstall: $(railway --version)"
+    Write-OK "Railway CLI sudah terinstall."
 }
 
 
@@ -43,7 +43,7 @@ if (-not $railwayInstalled) {
 # ─────────────────────────────────────────────
 Write-Step 2 "Login ke Railway..."
 Write-Warn "Browser akan terbuka untuk login dengan GitHub."
-Write-Warn "Setelah login di browser, kembali ke sini."
+Write-Warn "Setelah login di browser, kembali ke terminal ini."
 Write-Host ""
 railway login
 Write-OK "Login berhasil!"
@@ -63,137 +63,158 @@ Write-OK "Project 'spk-ahpsaw' dibuat!"
 Write-Step 4 "Menambahkan database PostgreSQL..."
 railway add --database postgresql
 Write-OK "PostgreSQL berhasil ditambahkan!"
-Start-Sleep -Seconds 5  # tunggu DB siap
+
+Write-Warn "Menunggu 10 detik agar database siap..."
+Start-Sleep -Seconds 10
 
 # Ambil DATABASE_URL otomatis
 Write-Warn "Mengambil DATABASE_URL dari Railway..."
-$DATABASE_URL = (railway variables get DATABASE_URL 2>$null)
+$DATABASE_URL = ""
+try {
+    $DATABASE_URL = (railway variables get DATABASE_URL 2>$null)
+} catch {}
+
 if (-not $DATABASE_URL) {
-    Write-Fail "Gagal ambil DATABASE_URL otomatis."
-    $DATABASE_URL = Read-Host "  Paste DATABASE_URL dari Railway dashboard"
+    Write-Warn "Tidak bisa ambil otomatis. Silakan buka Railway dashboard:"
+    Write-Host "  -> Klik service PostgreSQL -> tab Variables -> salin DATABASE_URL" -ForegroundColor White
+    $DATABASE_URL = Read-Host "  Paste DATABASE_URL di sini"
 }
-Write-OK "DATABASE_URL berhasil diambil!"
+Write-OK "DATABASE_URL berhasil didapat!"
 
 
 # ─────────────────────────────────────────────
 # STEP 5: Input SECRET_KEY
 # ─────────────────────────────────────────────
-Write-Step 5 "Mengatur SECRET_KEY..."
-Write-Warn "Masukkan SECRET_KEY (minimal 32 karakter acak)."
-Write-Warn "Contoh: spkahpsaw2026kementerianbinax9k2p7"
-$SECRET_KEY = Read-Host "  SECRET_KEY"
+Write-Step 5 "Mengatur SECRET_KEY untuk JWT..."
+Write-Warn "Masukkan SECRET_KEY (minimal 32 karakter). Tekan Enter untuk generate otomatis."
+$SECRET_KEY = Read-Host "  SECRET_KEY (atau Enter untuk auto-generate)"
+
 if ($SECRET_KEY.Length -lt 32) {
-    # Auto-generate jika terlalu pendek
-    Write-Warn "Terlalu pendek. Membuat SECRET_KEY otomatis..."
-    $SECRET_KEY = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 48 | ForEach-Object {[char]$_})
-    Write-OK "SECRET_KEY dibuat: $SECRET_KEY"
-    Write-Warn "CATAT SECRET_KEY ini di tempat aman!"
+    $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    $SECRET_KEY = -join (1..48 | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
+    Write-OK "SECRET_KEY di-generate otomatis."
+    Write-Host "  SECRET_KEY: $SECRET_KEY" -ForegroundColor White
+    Write-Warn "CATAT SECRET_KEY di atas di tempat aman!"
 }
 
 
 # ─────────────────────────────────────────────
 # STEP 6: Deploy Backend (FastAPI)
 # ─────────────────────────────────────────────
-Write-Step 6 "Deploy Backend (FastAPI)..."
+Write-Step 6 "Menyiapkan dan deploy Backend (FastAPI)..."
 
-# Tambah service backend
-railway add --service backend
+# Set variable backend
+Write-Warn "Menyimpan environment variables backend..."
+railway variables set "DATABASE_URL=$DATABASE_URL"
+railway variables set "SECRET_KEY=$SECRET_KEY"
+railway variables set "CORS_ORIGINS=http://localhost:5173"
 
-# Set root directory ke backend
-railway service backend
-
-# Set environment variables backend
-railway variables set DATABASE_URL="$DATABASE_URL" --service backend
-railway variables set SECRET_KEY="$SECRET_KEY" --service backend
-railway variables set CORS_ORIGINS="http://localhost:5173" --service backend
-
-# Deploy backend dari folder backend
+# Deploy dari subfolder backend
+Write-Warn "Menjalankan deploy backend dari folder /backend ..."
 Push-Location backend
-railway up --service backend --detach
+railway up --detach
 Pop-Location
 
-Write-OK "Backend sedang di-deploy (berjalan di background)..."
-Write-Warn "Menunggu 60 detik agar backend siap..."
+Write-OK "Backend sedang di-deploy di background..."
+Write-Warn "Menunggu 60 detik agar backend selesai build..."
 Start-Sleep -Seconds 60
 
 
 # ─────────────────────────────────────────────
-# STEP 7: Ambil URL Backend
+# STEP 7: Generate & Ambil URL Backend
 # ─────────────────────────────────────────────
-Write-Step 7 "Mengambil URL backend..."
-$BACKEND_URL = (railway domain --service backend 2>$null)
-if (-not $BACKEND_URL) {
-    Write-Warn "Membuat domain untuk backend..."
-    railway domain --service backend
+Write-Step 7 "Membuat domain publik untuk backend..."
+
+$BACKEND_DOMAIN = ""
+try {
+    $BACKEND_DOMAIN = (railway domain 2>$null)
+} catch {}
+
+if (-not $BACKEND_DOMAIN) {
+    Write-Warn "Membuat domain baru untuk backend..."
+    railway domain
     Start-Sleep -Seconds 5
-    $BACKEND_URL = (railway domain --service backend 2>$null)
+    try { $BACKEND_DOMAIN = (railway domain 2>$null) } catch {}
 }
-if ($BACKEND_URL -notmatch "^https://") {
-    $BACKEND_URL = "https://$BACKEND_URL"
+
+if ($BACKEND_DOMAIN -and ($BACKEND_DOMAIN -notmatch "^https://")) {
+    $BACKEND_URL = "https://$BACKEND_DOMAIN"
+} elseif ($BACKEND_DOMAIN) {
+    $BACKEND_URL = $BACKEND_DOMAIN
+} else {
+    Write-Warn "Tidak bisa ambil URL backend otomatis."
+    Write-Host "  Buka Railway dashboard -> service backend -> Settings -> Networking -> Generate Domain" -ForegroundColor White
+    $BACKEND_URL = Read-Host "  Paste URL backend (contoh: https://xxx.railway.app)"
 }
+
 Write-OK "Backend URL: $BACKEND_URL"
 
 
 # ─────────────────────────────────────────────
 # STEP 8: Deploy Frontend (React/Vite)
 # ─────────────────────────────────────────────
-Write-Step 8 "Deploy Frontend (React/Vite)..."
+Write-Step 8 "Menyiapkan dan deploy Frontend (React/Vite)..."
 
-# Tambah service frontend
-railway add --service frontend
+Write-Warn "Menyimpan VITE_API_URL untuk frontend..."
+railway variables set "VITE_API_URL=$BACKEND_URL"
 
-# Set VITE_API_URL ke URL backend
-railway variables set VITE_API_URL="$BACKEND_URL" --service frontend
-
-# Deploy frontend dari folder frontend
+Write-Warn "Menjalankan deploy frontend dari folder /frontend ..."
 Push-Location frontend
-railway up --service frontend --detach
+railway up --detach
 Pop-Location
 
-Write-OK "Frontend sedang di-deploy (berjalan di background)..."
-Write-Warn "Menunggu 90 detik agar frontend selesai build (npm install)..."
+Write-OK "Frontend sedang di-deploy di background..."
+Write-Warn "Menunggu 90 detik (npm install bisa lama)..."
 Start-Sleep -Seconds 90
 
 
 # ─────────────────────────────────────────────
 # STEP 9: Ambil URL Frontend & Update CORS
 # ─────────────────────────────────────────────
-Write-Step 9 "Mengambil URL frontend & update CORS backend..."
-$FRONTEND_URL = (railway domain --service frontend 2>$null)
-if (-not $FRONTEND_URL) {
-    Write-Warn "Membuat domain untuk frontend..."
-    railway domain --service frontend
-    Start-Sleep -Seconds 5
-    $FRONTEND_URL = (railway domain --service frontend 2>$null)
+Write-Step 9 "Membuat domain publik untuk frontend & update CORS backend..."
+
+$FRONTEND_DOMAIN = ""
+try {
+    Push-Location frontend
+    $FRONTEND_DOMAIN = (railway domain 2>$null)
+    Pop-Location
+} catch { Pop-Location }
+
+if (-not $FRONTEND_DOMAIN) {
+    Write-Warn "Tidak bisa ambil URL frontend otomatis."
+    Write-Host "  Buka Railway dashboard -> service frontend -> Settings -> Networking -> Generate Domain" -ForegroundColor White
+    $FRONTEND_URL = Read-Host "  Paste URL frontend (contoh: https://xxx.railway.app)"
+} elseif ($FRONTEND_DOMAIN -notmatch "^https://") {
+    $FRONTEND_URL = "https://$FRONTEND_DOMAIN"
+} else {
+    $FRONTEND_URL = $FRONTEND_DOMAIN
 }
-if ($FRONTEND_URL -notmatch "^https://") {
-    $FRONTEND_URL = "https://$FRONTEND_URL"
-}
+
 Write-OK "Frontend URL: $FRONTEND_URL"
 
-# Update CORS backend dengan URL frontend
+# Update CORS backend
 $CORS_ORIGINS = "$FRONTEND_URL,http://localhost:5173,http://localhost:3000"
-railway variables set CORS_ORIGINS="$CORS_ORIGINS" --service backend
+railway variables set "CORS_ORIGINS=$CORS_ORIGINS"
 Write-OK "CORS backend diupdate dengan URL frontend!"
 
 
 # ─────────────────────────────────────────────
-# SELESAI — Tampilkan ringkasan
+# SELESAI
 # ─────────────────────────────────────────────
 Write-Host ""
 Write-Host "=======================================" -ForegroundColor Green
-Write-Host "  DEPLOY SELESAI! " -ForegroundColor Green
+Write-Host "  DEPLOY SELESAI!                     " -ForegroundColor Green
 Write-Host "=======================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Backend  : $BACKEND_URL" -ForegroundColor White
 Write-Host "  Frontend : $FRONTEND_URL" -ForegroundColor White
 Write-Host "  API Docs : $BACKEND_URL/docs" -ForegroundColor White
 Write-Host ""
-Write-Host "  Setelah ini, cukup:" -ForegroundColor Yellow
+Write-Host "  Untuk update selanjutnya, cukup:" -ForegroundColor Yellow
 Write-Host "    git add -A" -ForegroundColor Gray
-Write-Host "    git commit -m 'pesan'" -ForegroundColor Gray
+Write-Host "    git commit -m 'pesan perubahan'" -ForegroundColor Gray
 Write-Host "    git push origin main" -ForegroundColor Gray
-Write-Host "  Railway akan otomatis redeploy! " -ForegroundColor Yellow
+Write-Host "  Railway akan otomatis redeploy!" -ForegroundColor Yellow
 Write-Host ""
 
 # Buka browser ke frontend
