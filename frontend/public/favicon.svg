@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Shield background -->
+  <path d="M16 2L4 7v9c0 7.5 5.1 14.5 12 16 6.9-1.5 12-8.5 12-16V7L16 2z" fill="#1B3A5C"/>
+  <!-- Inner shield -->
+  <path d="M16 4.5L6 8.5v7.5c0 6.3 4.3 12.1 10 13.5 5.7-1.4 10-7.2 10-13.5V8.5L16 4.5z" fill="#112A4A"/>
+  <!-- Gold road/stripe -->
+  <path d="M12 14h8l1 3H11l1-3z" fill="#D4A843"/>
+  <path d="M11 18h10l1 3H10l1-3z" fill="#D4A843" opacity="0.8"/>
+  <!-- Road center line -->
+  <rect x="15.25" y="11" width="1.5" height="2" rx="0.5" fill="#D4A843"/>
+  <rect x="15.25" y="22" width="1.5" height="2" rx="0.5" fill="#D4A843"/>
+  <!-- Red accent bar at bottom -->
+  <rect x="4" y="29" width="24" height="2" rx="1" fill="#C8102E"/>
+</svg>

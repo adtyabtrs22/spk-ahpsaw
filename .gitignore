@@ -1,0 +1,171 @@
+# ============================================================
+# SPK AHP-SAW — .gitignore
+# Stack: FastAPI (Python) + React/Vite (Node.js)
+# ============================================================
+
+
+# ============================================================
+# KEAMANAN — JANGAN PERNAH DI-UPLOAD
+# ============================================================
+.env
+.env.*
+!.env.example        # file contoh boleh di-upload
+*.pem
+*.key
+*.p12
+*.pfx
+CREDENTIALS.md       # berisi credential sensitif
+
+
+# ============================================================
+# PYTHON — BACKEND
+# ============================================================
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+.env/
+
+# Distribution / packaging
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+MANIFEST
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# SQLite local database (gunakan PostgreSQL di production)
+*.db
+*.sqlite
+*.sqlite3
+
+# Alembic (jika dipakai)
+# alembic/versions/   # uncomment jika tidak ingin upload migrasi
+
+
+# ============================================================
+# NODE.JS — FRONTEND
+# ============================================================
+
+# Dependencies
+node_modules/
+.npm/
+.pnpm-store/
+
+# Build output (Railway akan build sendiri)
+dist/
+dist-ssr/
+build/
+
+# Cache
+.vite/
+.cache/
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Lock files alternatif (pilih salah satu sesuai package manager)
+# Uncomment jika pakai yarn atau pnpm:
+# yarn.lock
+# pnpm-lock.yaml
+# package-lock.json diikutsertakan agar build Railway reproducible
+
+
+# ============================================================
+# EDITOR & IDE
+# ============================================================
+.vscode/
+!.vscode/extensions.json   # rekomendasikan extension saja boleh
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+.project
+.classpath
+
+# ============================================================
+# SISTEM OPERASI
+# ============================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+
+# ============================================================
+# FILE DOKUMENTASI LOKAL (tidak perlu di GitHub)
+# ============================================================
+CARA_MENJALANKAN.md
+
+
+# ============================================================
+# TOOLS INTERNAL (Antigravity / Agents)
+# ============================================================
+.agents/
+.gemini/
+skills-lock.json
+acuan/
+
+
+# ============================================================
+# DOCKER (jika dipakai di masa depan)
+# ============================================================
+# docker-compose.override.yml
+
+# ============================================================
+# MISC
+# ============================================================
+*.local
+*.bak
+*.tmp
+*.temp
