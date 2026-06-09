@@ -136,7 +136,7 @@ def seed_database():
     for si, sj, val in pw_lahan:
         db.add(PairwiseSubCriteria(criteria_id=c3.id, subcriteria_i=si, subcriteria_j=sj, value=val))
 
-    # ─── Alternatif (5 Ruas Jalan dari Excel) ────────────────────────────
+    # ─── Alternatif (10 Ruas Jalan dari Excel) ───────────────────────────
     a1 = Alternative(project_id=project.id, name="Jalan MT Haryono",
                      description="Jalan penghubung kawasan perdagangan utama")
     a2 = Alternative(project_id=project.id, name="Jalan Soekarno-Hatta",
@@ -145,9 +145,19 @@ def seed_database():
                      description="Jalan lokal kawasan industri dan perumahan")
     a4 = Alternative(project_id=project.id, name="Jalan Jenderal Sudirman",
                      description="Jalan utama pusat kota dan perkantoran")
-    a5 = Alternative(project_id=project.id, name="Jalan Prapatan",
+    a5 = Alternative(project_id=project.id, name="Jalan Projakal",
                      description="Jalan penghubung kawasan pertanian dan perkebunan")
-    db.add_all([a1, a2, a3, a4, a5])
+    a6 = Alternative(project_id=project.id, name="Jalan Syarifuddin Yoes",
+                     description="Jalan penghubung kawasan pemerintahan")
+    a7 = Alternative(project_id=project.id, name="Jalan Ruhui Rahayu",
+                     description="Jalan kawasan perumahan dan pemukiman")
+    a8 = Alternative(project_id=project.id, name="Jalan Mulawarman",
+                     description="Jalan penghubung kawasan industri")
+    a9 = Alternative(project_id=project.id, name="Jalan Ahmad Yani",
+                     description="Jalan utama penghubung pusat kota")
+    a10 = Alternative(project_id=project.id, name="Jalan Letjen Suprapto",
+                      description="Jalan penghubung kawasan perkantoran dan perdagangan")
+    db.add_all([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10])
     db.flush()
 
     # ─── Skor Alternatif (dari Excel: Matriks Keputusan) ─────────────────
@@ -170,10 +180,30 @@ def seed_database():
         (a4.id, sc1.id, 6), (a4.id, sc2.id, 5), (a4.id, sc3.id, 6), (a4.id, sc4.id, 6),
         (a4.id, sc5.id, 8), (a4.id, sc6.id, 8), (a4.id, sc7.id, 7), (a4.id, sc8.id, 8),
         (a4.id, sc9.id, 3), (a4.id, sc10.id, 5), (a4.id, sc11.id, 6), (a4.id, sc12.id, 8),
-        # Jalan Prapatan
+        # Jalan Projakal
         (a5.id, sc1.id, 8), (a5.id, sc2.id, 7), (a5.id, sc3.id, 5), (a5.id, sc4.id, 5),
         (a5.id, sc5.id, 5), (a5.id, sc6.id, 4), (a5.id, sc7.id, 6), (a5.id, sc8.id, 7),
         (a5.id, sc9.id, 8), (a5.id, sc10.id, 4), (a5.id, sc11.id, 4), (a5.id, sc12.id, 4),
+        # Jalan Syarifuddin Yoes
+        (a6.id, sc1.id, 5), (a6.id, sc2.id, 5), (a6.id, sc3.id, 6), (a6.id, sc4.id, 4),
+        (a6.id, sc5.id, 6), (a6.id, sc6.id, 5), (a6.id, sc7.id, 7), (a6.id, sc8.id, 8),
+        (a6.id, sc9.id, 2), (a6.id, sc10.id, 6), (a6.id, sc11.id, 6), (a6.id, sc12.id, 7),
+        # Jalan Ruhui Rahayu
+        (a7.id, sc1.id, 4), (a7.id, sc2.id, 4), (a7.id, sc3.id, 5), (a7.id, sc4.id, 3),
+        (a7.id, sc5.id, 5), (a7.id, sc6.id, 4), (a7.id, sc7.id, 6), (a7.id, sc8.id, 8),
+        (a7.id, sc9.id, 1), (a7.id, sc10.id, 7), (a7.id, sc11.id, 7), (a7.id, sc12.id, 6),
+        # Jalan Mulawarman
+        (a8.id, sc1.id, 6), (a8.id, sc2.id, 5), (a8.id, sc3.id, 5), (a8.id, sc4.id, 4),
+        (a8.id, sc5.id, 7), (a8.id, sc6.id, 8), (a8.id, sc7.id, 8), (a8.id, sc8.id, 9),
+        (a8.id, sc9.id, 3), (a8.id, sc10.id, 5), (a8.id, sc11.id, 5), (a8.id, sc12.id, 8),
+        # Jalan Ahmad Yani
+        (a9.id, sc1.id, 4), (a9.id, sc2.id, 3), (a9.id, sc3.id, 6), (a9.id, sc4.id, 3),
+        (a9.id, sc5.id, 6), (a9.id, sc6.id, 6), (a9.id, sc7.id, 9), (a9.id, sc8.id, 9),
+        (a9.id, sc9.id, 1), (a9.id, sc10.id, 6), (a9.id, sc11.id, 6), (a9.id, sc12.id, 9),
+        # Jalan Letjen Suprapto
+        (a10.id, sc1.id, 5), (a10.id, sc2.id, 4), (a10.id, sc3.id, 4), (a10.id, sc4.id, 4),
+        (a10.id, sc5.id, 6), (a10.id, sc6.id, 7), (a10.id, sc7.id, 8), (a10.id, sc8.id, 9),
+        (a10.id, sc9.id, 1), (a10.id, sc10.id, 5), (a10.id, sc11.id, 6), (a10.id, sc12.id, 8),
     ]
     for alt_id, sub_id, score in scores_data:
         db.add(AlternativeScore(alternative_id=alt_id, subcriteria_id=sub_id, score=score))
@@ -184,8 +214,9 @@ def seed_database():
     print("  Users: admin/admin123, operator/operator123, pimpinan/pimpinan123")
     print("  Project: Prioritas Perbaikan Jalan Kabupaten")
     print("  Kriteria: 3 kriteria utama, 12 sub-kriteria")
-    print("  Alternatif: 5 ruas jalan")
+    print("  Alternatif: 10 ruas jalan")
 
 
 if __name__ == "__main__":
     seed_database()
+

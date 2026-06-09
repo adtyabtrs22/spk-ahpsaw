@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import CORS_ORIGINS
 from app.database import engine, Base
-from app.routers import auth, projects, criteria, pairwise, alternatives, calculation
+from app.routers import auth, projects, criteria, pairwise, alternatives, calculation, import_export
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -44,6 +44,7 @@ app.include_router(criteria.router)
 app.include_router(pairwise.router)
 app.include_router(alternatives.router)
 app.include_router(calculation.router)
+app.include_router(import_export.router)
 
 
 @app.get("/")

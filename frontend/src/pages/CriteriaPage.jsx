@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { RiPencilLine, RiCheckLine, RiCloseLine } from 'react-icons/ri';
 
 const SAATY_SCALE = [
   { value: 9, label: '9 — Mutlak lebih penting' },
@@ -50,6 +51,11 @@ export default function CriteriaPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [projectId, setProjectId] = useState(null);
+
+  // Edit state
+  const [editingId, setEditingId] = useState(null); // "criteria_3" or "sub_5"
+  const [editName, setEditName] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
 
   useEffect(() => { loadProject(); }, []);
 
@@ -150,6 +156,101 @@ export default function CriteriaPage() {
     }
   };
 
+  // ─── Edit Nama Kriteria / Sub-Kriteria ──────────────────────────────
+  const startEdit = (type, id, currentName) => {
+    setEditingId(`${type}_${id}`);
+    setEditName(currentName);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName('');
+  };
+
+  const saveEdit = async (type, id, criteriaId) => {
+    if (!editName.trim()) return;
+    setEditSaving(true);
+    try {
+      if (type === 'criteria') {
+        await client.put(`/projects/${projectId}/criteria/${id}`, { name: editName.trim() });
+      } else {
+        await client.put(`/projects/${projectId}/criteria/${criteriaId}/subcriteria/${id}`, { name: editName.trim() });
+      }
+      // Reload criteria
+      const cRes = await client.get(`/projects/${projectId}/criteria/`);
+      setCriteria(cRes.data);
+      // Update activeCriteria if editing subcriteria
+      if (type === 'sub' && activeCriteria) {
+        const updated = cRes.data.find(c => c.id === activeCriteria.id);
+        if (updated) setActiveCriteria(updated);
+      }
+      cancelEdit();
+    } catch (err) {
+      alert('Gagal mengubah nama: ' + (err.response?.data?.detail || err.message));
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const renderEditableLabel = (type, id, name, criteriaId = null) => {
+    const editKey = `${type}_${id}`;
+    if (editingId === editKey) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <input
+            className="form-input"
+            style={{ padding: '4px 8px', fontSize: '0.85rem', minWidth: '120px' }}
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') saveEdit(type, id, criteriaId);
+              if (e.key === 'Escape') cancelEdit();
+            }}
+            autoFocus
+            disabled={editSaving}
+          />
+          <button
+            className="btn btn-sm"
+            onClick={() => saveEdit(type, id, criteriaId)}
+            disabled={editSaving}
+            style={{ padding: '2px 6px', background: 'var(--success-600)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+            title="Simpan"
+          >
+            <RiCheckLine />
+          </button>
+          <button
+            className="btn btn-sm"
+            onClick={cancelEdit}
+            style={{ padding: '2px 6px', background: 'var(--slate-400)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+            title="Batal"
+          >
+            <RiCloseLine />
+          </button>
+        </div>
+      );
+    }
+    return (
+      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {name}
+        {canEdit && (
+          <button
+            onClick={() => startEdit(type, id, name)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--navy-400)', padding: '2px', display: 'inline-flex',
+              alignItems: 'center', borderRadius: '4px', transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => { e.target.style.color = 'var(--navy-600)'; e.target.style.background = 'var(--slate-100)'; }}
+            onMouseLeave={(e) => { e.target.style.color = 'var(--navy-400)'; e.target.style.background = 'none'; }}
+            title="Edit nama"
+          >
+            <RiPencilLine size={14} />
+          </button>
+        )}
+      </span>
+    );
+  };
+
   const items = getItems();
 
   if (loading) return <div className="page-body text-center text-muted">Memuat data...</div>;
@@ -163,6 +264,51 @@ export default function CriteriaPage() {
         </div>
       </div>
       <div className="page-body">
+        {/* Daftar Kriteria & Sub-Kriteria (editable) */}
+        <div className="card mb-6 animate-in">
+          <div className="card-header">
+            <h3>Daftar Kriteria & Sub-Kriteria</h3>
+          </div>
+          <div className="card-body">
+            {criteria.map(c => (
+              <div key={c.id} style={{ marginBottom: 'var(--space-4)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: 'var(--navy-600)', fontSize: '0.8rem' }}>●</span>
+                  {renderEditableLabel('criteria', c.id, c.name)}
+                  {c.weight && (
+                    <span className="badge badge-navy" style={{ fontSize: '0.72rem' }}>
+                      Bobot: {(c.weight * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+                <div style={{ paddingLeft: 'var(--space-6)' }}>
+                  {(c.sub_criteria || []).map(sc => (
+                    <div key={sc.id} style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      fontSize: '0.88rem', color: 'var(--slate-600)', padding: '2px 0',
+                    }}>
+                      <span style={{ color: 'var(--slate-400)', fontSize: '0.7rem' }}>└</span>
+                      {renderEditableLabel('sub', sc.id, sc.name, c.id)}
+                      <span className="badge" style={{
+                        fontSize: '0.68rem',
+                        background: sc.criteria_type === 'benefit' ? 'var(--success-100)' : 'var(--danger-100)',
+                        color: sc.criteria_type === 'benefit' ? 'var(--success-700)' : 'var(--danger-700)',
+                      }}>
+                        {sc.criteria_type}
+                      </span>
+                      {sc.weight_global && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--slate-400)' }}>
+                          W={sc.weight_global.toFixed(4)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="tabs" style={{ maxWidth: '100%', overflowX: 'auto' }}>
           <button

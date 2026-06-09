@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Criteria, SubCriteria, Project, User, UserRole
-from app.schemas import CriteriaCreate, CriteriaResponse, SubCriteriaCreate, SubCriteriaResponse
+from app.schemas import (
+    CriteriaCreate, CriteriaResponse, CriteriaUpdate,
+    SubCriteriaCreate, SubCriteriaResponse, SubCriteriaUpdate,
+)
 from app.auth import get_current_user, require_role
 
 router = APIRouter(prefix="/api/projects/{project_id}/criteria", tags=["Criteria"])
@@ -73,6 +76,26 @@ def delete_criteria(
     return {"detail": "Kriteria berhasil dihapus"}
 
 
+@router.put("/{criteria_id}", response_model=CriteriaResponse)
+def update_criteria(
+    project_id: int,
+    criteria_id: int,
+    payload: CriteriaUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.OPERATOR)),
+):
+    """Update nama kriteria."""
+    criteria = db.query(Criteria).filter(
+        Criteria.id == criteria_id, Criteria.project_id == project_id
+    ).first()
+    if not criteria:
+        raise HTTPException(status_code=404, detail="Kriteria tidak ditemukan")
+    criteria.name = payload.name
+    db.commit()
+    db.refresh(criteria)
+    return criteria
+
+
 # ─── Sub-Criteria ────────────────────────────────────────────────────────
 
 @router.post("/{criteria_id}/subcriteria", response_model=SubCriteriaResponse)
@@ -117,3 +140,24 @@ def delete_subcriteria(
     db.delete(sub)
     db.commit()
     return {"detail": "Sub-kriteria berhasil dihapus"}
+
+
+@router.put("/{criteria_id}/subcriteria/{sub_id}", response_model=SubCriteriaResponse)
+def update_subcriteria(
+    project_id: int,
+    criteria_id: int,
+    sub_id: int,
+    payload: SubCriteriaUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.OPERATOR)),
+):
+    """Update nama sub-kriteria."""
+    sub = db.query(SubCriteria).filter(
+        SubCriteria.id == sub_id, SubCriteria.criteria_id == criteria_id
+    ).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Sub-kriteria tidak ditemukan")
+    sub.name = payload.name
+    db.commit()
+    db.refresh(sub)
+    return sub

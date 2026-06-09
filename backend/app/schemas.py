@@ -75,6 +75,12 @@ class SubCriteriaResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class CriteriaUpdate(BaseModel):
+    name: str
+
+class SubCriteriaUpdate(BaseModel):
+    name: str
+
 class CriteriaCreate(BaseModel):
     name: str
     display_order: int = 0
